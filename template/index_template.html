@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PintensIA — Boletín de General Pinto</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.55;
+  }
+  header { text-align: center; margin-bottom: 8px; }
+  header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  .fecha { color: #666; font-size: 0.95rem; margin-bottom: 24px; text-align: center; }
+  h2 { font-size: 1.15rem; margin-top: 28px; border-bottom: 2px solid #ddd; padding-bottom: 4px; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  footer { margin-top: 48px; font-size: 0.8rem; color: #888; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏘️ PintensIA</h1>
+</header>
+<p class="fecha">Boletín del {{FECHA}} — General Pinto</p>
+<p style="text-align:center;"><a href="directorio.html">🛠️ Ver directorio de oficios y servicios</a></p>
+
+{{CONTENIDO}}
+
+<footer>
+  Generado automáticamente con IA a partir de redes sociales públicas de Pinto.
+  Puede contener errores — si ves algo mal, avisale a quien arma este boletín.
+</footer>
+</body>
+</html>
