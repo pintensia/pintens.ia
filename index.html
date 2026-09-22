@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PintensIA — Directorio de oficios y servicios</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --borde: #ddd;
+    --texto-suave: #666;
+    --fondo-card: rgba(0,0,0,0.03);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --borde: #333; --texto-suave: #aaa; --fondo-card: rgba(255,255,255,0.06); }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.55;
+  }
+  header { text-align: center; margin-bottom: 8px; }
+  header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  .subt { color: var(--texto-suave); font-size: 0.95rem; margin-bottom: 20px; text-align: center; }
+
+  .controles { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .controles input, .controles select {
+    flex: 1; min-width: 140px; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--borde); font-size: 1rem; background: transparent; color: inherit;
+  }
+
+  .card {
+    border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 12px; background: var(--fondo-card);
+  }
+  .card h3 { margin: 0 0 4px; font-size: 1.05rem; }
+  .card .categoria {
+    display: inline-block; font-size: 0.78rem; color: var(--texto-suave);
+    border: 1px solid var(--borde); border-radius: 999px; padding: 2px 10px; margin-bottom: 8px;
+  }
+  .card p { margin: 4px 0; }
+  .card .contacto { font-size: 0.92rem; }
+  .card a { color: inherit; }
+
+  #estado { text-align: center; color: var(--texto-suave); padding: 24px 0; }
+  footer { margin-top: 48px; font-size: 0.8rem; color: var(--texto-suave); text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛠️ Directorio de Pinto</h1>
+</header>
+<p class="subt">Oficios y servicios de vecinos de General Pinto</p>
+
+<div class="controles">
+  <input type="text" id="buscador" placeholder="Buscar por nombre, oficio o palabra clave...">
+  <select id="filtroCategoria">
+    <option value="">Todas las categorías</option>
+  </select>
+</div>
+
+<div id="estado">Cargando directorio...</div>
+<div id="lista"></div>
+
+<footer>
+  ¿Ofrecés un servicio en Pinto? <a id="linkFormulario" href="#" target="_blank" rel="noopener">Cargate acá</a>.
+  Las publicaciones se revisan antes de aparecer en el listado.
+</footer>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN — completar con tus datos reales
+   ============================================================ */
+const SHEET_ID = "1pF9yJ6MzCQ0GgLnQJEtjJkfXiK0mo8LpTvOJHcsKqEg";
+const NOMBRE_HOJA = "Respuestas de formulario 1";
+const LINK_FORMULARIO = "https://docs.google.com/forms/d/e/1FAIpQLSf1UJz_0Hc8H8DtCSeMFbiBe6IbvlHZmShrOgNUDD88pZPUlg/viewform?usp=sharing&ouid=115477518802213022429";
+
+/* ============================================================
+   A partir de acá no hace falta tocar nada
+   ============================================================ */
+document.getElementById("linkFormulario").href = LINK_FORMULARIO;
+
+function normalizar(texto) {
+  return (texto || "")
+    .toString()
+    .toLowerCase()
+    .replace(/[áàäâ]/g, "a")
+    .replace(/[éèëê]/g, "e")
+    .replace(/[íìïî]/g, "i")
+    .replace(/[óòöô]/g, "o")
+    .replace(/[úùüû]/g, "u")
+    .replace(/ñ/g, "n")
+    .trim();
+}
+
+function buscarColumna(headers, ...pistas) {
+  const idx = headers.findIndex(h => {
+    const hn = normalizar(h);
+    return pistas.some(p => hn.includes(normalizar(p)));
+  });
+  return idx;
+}
+
+function esPublicado(valor) {
+  const v = normalizar(valor);
+  return v === "si" || v === "sí" || v === "true" || v === "x" || v === "publicado";
+}
+
+let entradasTodas = [];
+
+function renderizar() {
+  const q = normalizar(document.getElementById("buscador").value);
+  const cat = document.getElementById("filtroCategoria").value;
+
+  const filtradas = entradasTodas.filter(e => {
+    const matchQ = !q || normalizar(e.nombre + " " + e.categoria + " " + e.descripcion + " " + e.zona).includes(q);
+    const matchCat = !cat || e.categoria === cat;
+    return matchQ && matchCat;
+  });
+
+  const lista = document.getElementById("lista");
+  const estado = document.getElementById("estado");
+
+  if (entradasTodas.length === 0) {
+    estado.textContent = "Todavía no hay servicios cargados.";
+    estado.style.display = "block";
+    lista.innerHTML = "";
+    return;
+  }
+  if (filtradas.length === 0) {
+    estado.textContent = "No encontramos nada con esa búsqueda.";
+    estado.style.display = "block";
+    lista.innerHTML = "";
+    return;
+  }
+
+  estado.style.display = "none";
+  lista.innerHTML = filtradas.map(e => `
+    <div class="card">
+      <span class="categoria">${e.categoria || "General"}</span>
+      <h3>${e.nombre || "(sin nombre)"}</h3>
+      ${e.descripcion ? `<p>${e.descripcion}</p>` : ""}
+      <p class="contacto">
+        ${e.telefono ? `📞 ${e.telefono}` : ""}
+        ${e.zona ? ` · 📍 ${e.zona}` : ""}
+      </p>
+      ${e.redes ? `<p><a href="${e.redes}" target="_blank" rel="noopener">Ver redes</a></p>` : ""}
+    </div>
+  `).join("");
+}
+
+function poblarCategorias() {
+  const select = document.getElementById("filtroCategoria");
+  const categorias = [...new Set(entradasTodas.map(e => e.categoria).filter(Boolean))].sort();
+  categorias.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    select.appendChild(opt);
+  });
+}
+
+function cargarDatosSheet(respuesta) {
+  try {
+    const tabla = respuesta.table;
+    const headers = tabla.cols.map(c => c.label || "");
+
+    const idxNombre = buscarColumna(headers, "nombre", "negocio");
+    const idxCategoria = buscarColumna(headers, "categoria", "oficio", "rubro");
+    const idxTelefono = buscarColumna(headers, "telefono", "whatsapp", "celular");
+    const idxDescripcion = buscarColumna(headers, "descrip");
+    const idxZona = buscarColumna(headers, "zona", "barrio");
+    const idxRedes = buscarColumna(headers, "instagram", "facebook", "redes");
+    const idxPublicado = buscarColumna(headers, "public");
+
+    const val = (row, idx) => (idx >= 0 && row.c[idx] && row.c[idx].v != null) ? row.c[idx].v : "";
+
+    entradasTodas = tabla.rows
+      .map(row => ({
+        nombre: val(row, idxNombre),
+        categoria: val(row, idxCategoria),
+        telefono: val(row, idxTelefono),
+        descripcion: val(row, idxDescripcion),
+        zona: val(row, idxZona),
+        redes: val(row, idxRedes),
+        publicado: val(row, idxPublicado),
+      }))
+      .filter(e => idxPublicado < 0 ? true : esPublicado(e.publicado));
+
+    poblarCategorias();
+    renderizar();
+  } catch (err) {
+    document.getElementById("estado").textContent =
+      "Hubo un problema leyendo la planilla. Revisá que el SHEET_ID y el nombre de la hoja sean correctos.";
+    console.error(err);
+  }
+}
+
+document.getElementById("buscador").addEventListener("input", renderizar);
+document.getElementById("filtroCategoria").addEventListener("change", renderizar);
+
+if (SHEET_ID.startsWith("PEGAR_AQUI")) {
+  document.getElementById("estado").textContent =
+    "Falta configurar el SHEET_ID en el código de esta página.";
+} else {
+  const script = document.createElement("script");
+  script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler=cargarDatosSheet&sheet=${encodeURIComponent(NOMBRE_HOJA)}`;
+  document.body.appendChild(script);
+}
+</script>
+</body>
+</html>
