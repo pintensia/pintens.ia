@@ -374,7 +374,7 @@ if (SHEET_ID.startsWith("PEGAR_AQUI")) {
     '<div class="icono">⚠️</div><div>Falta configurar el SHEET_ID en el código de esta página.</div>';
 } else {
   const script = document.createElement("script");
-  script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler=cargarDatosSheet&sheet=${encodeURIComponent(NOMBRE_HOJA)}`;
+  script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:cargarDatosSheet&sheet=${encodeURIComponent(NOMBRE_HOJA)}`;
   document.body.appendChild(script);
 }
 </script>
